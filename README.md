@@ -28,7 +28,7 @@ cd NOM_DU_REPO
 pip install -r requirements.txt
 ```
 
-###Lancez d'abord le script de connaissance pour indexer vos documents Option 4:
+### Lancez d'abord le script de connaissance pour indexer vos documents Option 4:
 ```bash
 
 python rag4.py
