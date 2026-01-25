@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.A.R.V.I.S.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --bg-dark: #020617;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--neon-blue);
+            font-family: 'Fira Code', monospace;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* Empêche toute la page de défiler */
+            background-image: radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 1) 0%, rgba(2, 6, 23, 1) 100%);
+        }
+
+        /* --- SCROLLBAR CIBLÉE --- */
+        #chat-box::-webkit-scrollbar { width: 4px; }
+        #chat-box::-webkit-scrollbar-track { background: rgba(0, 242, 255, 0.02); }
+        #chat-box::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.2); border-radius: 10px; }
+
+        .overlay {
+            position: fixed; inset: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none; z-index: 50;
+        }
+
+        .neon-border {
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.05);
+            backdrop-filter: blur(12px);
+        }
+
+        /* --- CORE JARVIS (Fixe en arrière-plan) --- */
+        .jarvis-core-wrap {
+            position: absolute; top: 40%; left: 50%;
+            transform: translate(-50%, -50%); z-index: 0;
+            pointer-events: none;
+        }
+
+        .jarvis-core {
+            width: 260px; height: 260px; border-radius: 50%;
+            border: 2px solid var(--neon-blue);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
+            animation: core-rotate 20s linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes core-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .message-appear { animation: slideIn 0.3s ease-out forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="p-6 flex flex-col gap-6">
+    <div class="overlay"></div>
+
+    <header class="h-20 flex items-center justify-between px-8 neon-border bg-slate-900/40 rounded-xl shrink-0 z-10">
+        
+        <div class="flex items-center gap-6">
+            <div class="p-3 rounded-full bg-cyan-500/10 border border-cyan-500/30">
+                <i data-lucide="mic" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tighter text-cyan-400">J.A.R.V.I.S</h1>
+                <p class="text-[9px] opacity-50 uppercase tracking-[0.3em]">Online</p>
+            </div>
+        </div>
+        <div class="flex flex-col items-center gap-1 min-w-[300px]">
+    <div class="flex items-center gap-4">
+        <button onclick="musicCmd('previous')" class="hover:text-cyan-400 transition-colors">
+            <i data-lucide="skip-back" class="w-4 h-4"></i>
+        </button>
+        <button onclick="musicCmd('play-pause')" class="p-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20">
+            <i data-lucide="play" id="play-icon" class="w-4 h-4"></i>
+        </button>
+        <button onclick="musicCmd('next')" class="hover:text-cyan-400 transition-colors">
+            <i data-lucide="skip-forward" class="w-4 h-4"></i>
+        </button>
+    </div>
+    <div class="w-full space-y-1">
+        <p id="track-name" class="text-[9px] text-center truncate w-64 opacity-80 tracking-widest uppercase">No Track Detected</p>
+        <div class="w-full h-1 bg-cyan-900/30 rounded-full overflow-hidden">
+            <div id="track-progress" class="h-full bg-cyan-400 shadow-[0_0_8px_#00f2ff] transition-all duration-500" style="width: 0%"></div>
+        </div>
+    </div>
+</div>
+        <div class="flex gap-8 text-right">
+            <div>
+                <p class="text-[9px] opacity-50 uppercase">System Load</p>
+                <span id="cpu-text" class="text-xs font-bold">0%</span>
+            </div>
+            <div class="border-l border-cyan-900 pl-8">
+                <p class="text-[9px] opacity-50 uppercase">Vision</p>
+                <span id="vision-count" class="text-xs text-green-400 font-bold">USR: 00</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 grid grid-cols-12 gap-6 overflow-hidden relative">
+        <div class="jarvis-core-wrap">
+            <div class="jarvis-core">
+                <div class="text-center">
+                    <span class="block text-[8px] tracking-[0.5em] opacity-40">CORE</span>
+                    <span class="text-xl font-black">J.A.R.V.I.S</span>
+                </div>
+            </div>
+        </div>
+
+        <aside class="col-span-3 neon-border bg-slate-900/20 rounded-xl p-4 overflow-hidden flex flex-col z-10">
+            <h3 class="text-[10px] font-bold uppercase mb-4 border-b border-cyan-900/50 pb-2">Stream</h3>
+            <div id="intel-feed" class="flex-1 space-y-2 text-[8px] opacity-60 overflow-hidden"></div>
+        </aside>
+
+        <section class="col-span-6 flex flex-col gap-4 z-10 overflow-hidden">
+            <div id="chat-box" class="flex-1 overflow-y-auto px-2 space-y-4">
+                </div>
+
+            <div class="h-14 neon-border bg-slate-900/80 rounded-xl flex items-center px-6 gap-4 shrink-0 focus-within:border-cyan-400 transition-all">
+                <i data-lucide="terminal" class="w-4 h-4 opacity-40"></i>
+                <input type="text" id="user-input" autocomplete="off" placeholder="ready" 
+                       class="bg-transparent border-none outline-none flex-1 text-xs tracking-[0.2em] text-cyan-100">
+            </div>
+        </section>
+
+        <aside class="col-span-3 flex flex-col gap-4 z-10">
+            <div class="flex-1 neon-border bg-slate-900/20 rounded-xl p-4 space-y-6">
+                <h3 class="text-[10px] font-bold uppercase border-b border-cyan-900/50 pb-2">Environment</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-cyan-500/5 p-2 rounded border border-cyan-500/10 text-center">
+                        <p class="text-[8px] uppercase opacity-40">Mem</p>
+                        <p id="mem-text" class="text-sm">0%</p>
+                    </div>
+                    <div class="bg-cyan-500/5 p-2 rounded border border-cyan-500/10 text-center">
+                        <p class="text-[8px] uppercase opacity-40">Bat</p>
+                        <p id="bat-text" class="text-sm">0%</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <footer class="h-6 flex justify-between items-center px-4 text-[8px] uppercase tracking-[0.5em] opacity-30 shrink-0">
+        <span id="timestamp"></span>
+        <span>Marseille</span>
+    </footer>
+
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // 1. Liaison Python
+        let backend;
+        if (typeof qt !== 'undefined') {
+            new QWebChannel(qt.webChannelTransport, function (channel) {
+                backend = channel.objects.backend;
+            });
+        }
+
+        // 2. Horloge
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('timestamp').innerText = now.toLocaleString('fr-FR');
+        }, 1000);
+
+        // Fonction pour envoyer les commandes au Python
+        function musicCmd(action) {
+            if(backend) {
+            // On envoie une chaîne que le backend Python devra interpréter
+            backend.receive_text(`MUSIC_CMD:${action}`);
+            }
+        }
+
+        // 3. Logique de Chat & Autoscroll
+        function appendChat(sender, text, isUser) {
+            const chatBox = document.getElementById('chat-box');
+            if (!chatBox) return;
+
+            const cleanedText = text.replace(/\*/g, '');
+            const msg = document.createElement('div');
+            msg.className = `message-appear ${isUser ? 'ml-auto text-right' : 'mr-auto'} max-w-[85%]`;
+            
+            msg.innerHTML = `
+                <span class="text-[7px] opacity-40 uppercase mb-1 block">${sender}</span>
+                <div class="p-3 ${isUser ? 'bg-cyan-400/10 border-r-2 border-cyan-400' : 'bg-slate-800/60 border-l-2 border-white/20'} rounded-lg text-xs leading-relaxed">
+                    ${cleanedText}
+                </div>
+            `;
+
+            chatBox.appendChild(msg);
+
+            // --- AUTOSCROLL CIBLÉ ---
+            // On ne descend que si l'utilisateur n'est pas déjà en train de remonter pour lire
+            setTimeout(() => {
+                chatBox.scrollTo({
+                    top: chatBox.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 50);
+
+            // Petit log à gauche
+            const feed = document.getElementById('intel-feed');
+            const entry = document.createElement('div');
+            entry.className = 'border-l border-cyan-900 pl-2 mb-1 opacity-50';
+            entry.innerText = `> ${cleanedText.substring(0,25)}...`;
+            feed.prepend(entry);
+            if(feed.children.length > 10) feed.lastChild.remove();
+        }
+
+        // 4. Input Clavier
+        document.getElementById('user-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && this.value.trim() !== "") {
+                const val = this.value;
+                appendChat('USER', val, true);
+                if(backend) backend.receive_text(val); 
+                this.value = ''; 
+            }
+        });
+
+        // 5. Réception Python
+        window.processPythonData = function(data) {
+            if (typeof data === 'string') data = JSON.parse(data);
+                switch(data.type) {
+                case 'user_msg': appendChat('USER', data.content, true); break;
+                case 'jarvis_msg': appendChat('JARVIS', data.content, false); break;
+                case 'stats':
+                    document.getElementById('cpu-text').innerText = Math.round(data.cpu) + "%";
+                    document.getElementById('mem-text').innerText = Math.round(data.memory) + "%";
+                    document.getElementById('bat-text').innerText = Math.round(data.battery) + "%";
+                    document.getElementById('vision-count').innerText = `USR: ${String(data.people).padStart(2, '0')}`;
+                
+                if(data.music) {
+                document.getElementById('track-name').innerText = data.music.title || "Silence";
+                document.getElementById('track-progress').style.width = (data.music.progress || 0) + "%";
+                
+                // Change l'icône si en lecture ou pause
+                const icon = document.getElementById('play-icon');
+                if(data.music.status === "Playing") {
+                    icon.setAttribute('data-lucide', 'pause');
+                } else {
+                    icon.setAttribute('data-lucide', 'play');
+                }
+                lucide.createIcons(); // Rafraîchir les icônes Lucide
+            }
+            break;
+            }
+        };
+
+        // Welcome
+        setTimeout(() => appendChat('SYSTEM', 'Ready to discuts, awaiting...', false), 1000);
+    </script>
+</body>
+</html>

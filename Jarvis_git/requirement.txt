@@ -1,0 +1,29 @@
+# --- Interface et Système ---
+PyQt5
+PyQtWebEngine
+psutil
+python-dotenv
+
+# --- IA et NLP ---
+ollama
+chromadb
+sentence-transformers
+langchain-text-splitters
+tqdm
+
+# --- Audio et Voix ---
+pyaudio
+vosk
+shazamio
+librosa
+numpy
+scipy
+wave
+
+# --- Vision et Utilitaires ---
+opencv-python
+requests
+beautifulsoup4
+PyPDF2
+python-docx
+fpdf
