@@ -23,8 +23,8 @@ J.A.R.V.I.S. est un assistant personnel intelligent et multimodal inspiré de l'
 
 ### 2. Clonage et dépendances
 ```bash
-git clone [https://github.com/TON_PROFIL/NOM_DU_REPO.git](https://github.com/TON_PROFIL/NOM_DU_REPO.git)
-cd NOM_DU_REPO
+git clone [https://github.com/joavant/Jarvis.git](https://github.com/joavant/Jarvis.git)
+cd Jarvis
 pip install -r requirements.txt
 ```
 
