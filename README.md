@@ -39,3 +39,25 @@ Lancez l'assistant principal :
 
 python jarvis6_1.py
 ```
+
+# Visualiser la base de donné
+1. Lancez la commande 
+```bash
+python3 co-occurence.py
+```
+2. Lancez cette commande
+```bash
+python3 -m http.server 8000
+```
+3. puis, sur un navigateur faites
+```bash
+http://0.0.0.0:8000/nom_du_fichier_html
+```
+## Démo en ligne (Exemple avec 4 nœuds)
+
+Tu peux explorer la base de connaissances directement depuis ton navigateur grâce aux deux modes de visualisation disponibles :
+
+* **[Lancer la version 2D (Plus fluide et rapide)](https://joavant.github.io/Jarvis/cortex2d.html)**
+* **[Lancer la version 3D](https://joavant.github.io/Jarvis/cortex3d.html)**
+
+> 💡 *Note : Personnellement, l'affichage reste fluide en local jusqu'à 12 975 nœuds et 56 982 liens avec les paramètres par défaut.*
