@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Mnemia — Second Cerveau (Optimisé Canvas)</title>
+<style>
+  :root {
+    --bg-deep: #050810;
+    --bg-mid: #0a1422;
+    --panel: rgba(10, 22, 40, 0.85);
+    --cyan: #00d9ff;
+    --cyan-dim: rgba(0, 217, 255, 0.35);
+    --text: #c5d4eb;
+    --text-mid: #8aa3c4;
+    --text-dim: #5d7290;
+    --border: rgba(0, 217, 255, 0.18);
+    --border-strong: rgba(0, 217, 255, 0.4);
+    --hilite: #ffb84d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    user-select: none;
+  }
+
+  #app {
+    display: grid;
+    grid-template-columns: 240px 1fr 320px;
+    height: 100vh;
+  }
+
+  /* Panneau gauche */
+  #themes-panel {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 24px 18px;
+    overflow-y: auto;
+    backdrop-filter: blur(10px);
+    z-index: 5;
+  }
+
+  .panel-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-title small { color: var(--text-dim); letter-spacing: 1px; font-size: 9px; }
+
+  .theme-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .theme-chip:hover { background: rgba(0, 217, 255, 0.08); }
+  .theme-chip.muted { opacity: 0.25; }
+
+  .theme-chip .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+    flex-shrink: 0;
+  }
+  .theme-chip .name { flex: 1; }
+  .theme-chip .count { color: var(--text-dim); font-size: 10px; font-variant-numeric: tabular-nums; }
+
+  .panel-actions {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-mid);
+    padding: 7px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--cyan-dim); color: var(--cyan); }
+
+  /* Centre : Zone Graphique */
+  #graph-area {
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #0c192d 0%, #050810 100%);
+  }
+
+  #graph-canvas {
+    width: 100%; height: 100%;
+    display: block;
+    cursor: grab;
+  }
+  #graph-canvas:active { cursor: grabbing; }
+
+  #topbar {
+    position: absolute;
+    top: 18px; left: 18px; right: 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  #brand {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    font-weight: 500;
+    text-shadow: 0 0 12px var(--cyan-dim);
+  }
+  #brand small { color: var(--text-dim); letter-spacing: 2px; margin-left: 8px; }
+
+  #search {
+    pointer-events: auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 14px 9px 32px;
+    border-radius: 20px;
+    font-size: 12px;
+    width: 240px;
+    outline: none;
+    margin-left: auto;
+    backdrop-filter: blur(10px);
+    transition: border-color 0.15s, width 0.2s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2300d9ff' opacity='0.6'%3E%3Cpath fill-rule='evenodd' d='M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    background-size: 14px;
+  }
+  #search:focus { border-color: var(--cyan); width: 280px; }
+
+  #stats {
+    position: absolute;
+    bottom: 18px; left: 18px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+  }
+  #stats b { color: var(--cyan); margin-left: 6px; font-weight: 500; }
+  #stats span { margin: 0 6px; color: var(--border-strong); }
+
+  /* Panneau droit */
+  #details-panel {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    padding: 24px 18px;
+    overflow-y: auto;
+    backdrop-filter: blur(10px);
+    z-index: 5;
+  }
+
+  .empty-state {
+    color: var(--text-dim); font-size: 11px; font-style: italic; text-align: center; margin-top: 60px; line-height: 1.8;
+  }
+  .empty-state .icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+
+  .node-theme { display: flex; align-items: center; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+  .node-theme .dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
+  .node-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 12px; line-height: 1.4; }
+  
+  .node-content {
+    background: rgba(255, 255, 255, 0.02); border-left: 2px solid var(--cyan-dim); padding: 12px 14px;
+    margin: 0 0 16px; font-size: 12px; color: var(--text-mid); line-height: 1.7; border-radius: 0 4px 4px 0;
+    max-height: 180px; overflow-y: auto;
+  }
+
+  .node-source { font-size: 10px; color: var(--text-dim); margin-bottom: 16px; word-break: break-all; }
+  .node-source b { color: var(--text-mid); font-weight: 400; }
+
+  .conn-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--cyan-dim); margin: 18px 0 8px; display: flex; justify-content: space-between; align-items: baseline; }
+  .conn-section-title small { color: var(--text-dim); }
+
+  .conn-item { display: flex; align-items: center; gap: 8px; padding: 7px 9px; margin-bottom: 3px; background: rgba(255, 255, 255, 0.015); border-radius: 3px; cursor: pointer; font-size: 11px; }
+  .conn-item:hover { background: rgba(0, 217, 255, 0.08); }
+  .conn-item .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .conn-item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .conn-item .cross { color: var(--cyan); font-size: 9px; }
+  .conn-item .w { color: var(--text-dim); font-size: 10px; font-variant-numeric: tabular-nums; min-width: 30px; text-align: right; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .error-banner { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); background: rgba(180, 50, 50, 0.2); border: 1px solid #ff6464; color: #ffaaaa; padding: 12px 20px; border-radius: 4px; z-index: 20; backdrop-filter: blur(10px); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <aside id="themes-panel">
+    <div class="panel-title">
+      <span>Thèmes</span>
+      <small id="theme-counter">—</small>
+    </div>
+    <div id="themes-list"></div>
+    <div class="panel-actions">
+      <button class="btn" onclick="toggleAll(true)">Tout afficher</button>
+      <button class="btn" onclick="toggleAll(false)">Tout masquer</button>
+      <button class="btn" onclick="restartSim()">Réorganiser</button>
+    </div>
+  </aside>
+
+  <main id="graph-area">
+    <div id="topbar">
+      <div id="brand">Mnemia <small>Second Cerveau</small></div>
+      <input id="search" placeholder="Rechercher un concept...">
+    </div>
+    <canvas id="graph-canvas"></canvas>
+    <div id="stats">CHARGEMENT...</div>
+  </main>
+
+  <aside id="details-panel">
+    <div class="panel-title"><span>Détails</span></div>
+    <div id="details-content">
+      <div class="empty-state">
+        <div class="icon">◌</div>
+        Survolez un nœud pour explorer ses connexions.<br>
+        Cliquez pour le verrouiller.
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+let data = { nodes: [], links: [], themes: [], stats: {} };
+let activeThemes = new Set();
+let selectedNode = null;
+let hoveredNode = null;
+let searchQuery = "";
+
+let canvas, ctx, simulation;
+let transform = d3.zoomIdentity;
+let degreeMap = {};
+let linkedByIndex = {};
+
+async function init() {
+  canvas = document.getElementById('graph-canvas');
+  ctx = canvas.getContext('2d');
+  
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  try {
+    const res = await fetch('mnemia_brain.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    data = await res.json();
+  } catch (e) {
+    showError(e.message);
+    return;
+  }
+
+  data.themes.forEach(t => activeThemes.add(t.name));
+  
+  // Optimisation de la recherche de connexions
+  degreeMap = {};
+  linkedByIndex = {};
+  data.links.forEach(l => {
+    const s = l.source.id || l.source;
+    const t = l.target.id || l.target;
+    degreeMap[s] = (degreeMap[s] || 0) + 1;
+    degreeMap[t] = (degreeMap[t] || 0) + 1;
+    linkedByIndex[`${s},${t}`] = true;
+    linkedByIndex[`${t},${s}`] = true;
+  });
+
+  renderThemes();
+  renderStats();
+  initSimulation();
+  setupInteractions();
+}
+
+function resizeCanvas() {
+  const area = document.getElementById('graph-area');
+  canvas.width = area.clientWidth * window.devicePixelRatio;
+  canvas.height = area.clientHeight * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  if (simulation) tictoc();
+}
+
+function showError(msg) {
+  const banner = document.createElement('div');
+  banner.className = 'error-banner';
+  banner.innerHTML = `Impossible de charger <code>mnemia_brain.json</code> (${msg})`;
+  document.getElementById('graph-area').appendChild(banner);
+}
+
+function renderThemes() {
+  document.getElementById('theme-counter').textContent = data.themes.length;
+  document.getElementById('themes-list').innerHTML = data.themes.map(t => `
+    <div class="theme-chip" data-theme="${t.name}" id="chip-${t.name}" onclick="toggleTheme('${t.name}')">
+      <div class="dot" style="background:${t.color}; color:${t.color}"></div>
+      <span class="name">${t.name.replace(/_/g, ' ')}</span>
+      <span class="count">${t.count}</span>
+    </div>
+  `).join('');
+}
+
+function renderStats() {
+  const s = data.stats;
+  document.getElementById('stats').innerHTML =
+    `NŒUDS<b>${s.nodes}</b><span>·</span>` +
+    `LIENS<b>${s.links}</b><span>·</span>` +
+    `SEUIL<b>${s.threshold}</b>`;
+}
+
+function initSimulation() {
+  const area = document.getElementById('graph-area');
+  const W = area.clientWidth, H = area.clientHeight;
+
+  // Optimisation de la force physique pour 13k noeuds
+  simulation = d3.forceSimulation(data.nodes)
+    .force('link', d3.forceLink(data.links).id(d => d.id).distance(60).strength(0.3))
+    .force('charge', d3.forceManyBody().strength(-40).distanceMax(300))
+    .force('center', d3.forceCenter(W / 2, H / 2))
+    .force('collide', d3.forceCollide(d => 3 + Math.sqrt(degreeMap[d.id] || 1)).iterations(1));
+
+  simulation.on('tick', tictoc);
+}
+
+// Fonction maîtresse de dessin ultra-rapide (Canvas)
+function tictoc() {
+  const area = document.getElementById('graph-area');
+  const W = area.clientWidth, H = area.clientHeight;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(transform.x, transform.y);
+  ctx.scale(transform.k, transform.k);
+
+  const activeFocus = selectedNode || hoveredNode;
+
+  // PASSE 1 : Dessiner les liens
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i < data.links.length; i++) {
+    const l = data.links[i];
+    if (!activeThemes.has(l.source.theme) || !activeThemes.has(l.target.theme)) continue;
+
+    const isConnected = activeFocus && (l.source.id === activeFocus.id || l.target.id === activeFocus.id);
+    
+    if (activeFocus && !isConnected) {
+      continue; // On masque complètement les liens non connectés pour booster les perfs et la lisibilité
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(l.source.x, l.source.y);
+    ctx.lineTo(l.target.x, l.target.y);
+    
+    if (isConnected) {
+      ctx.strokeStyle = '#00d9ff';
+      ctx.lineWidth = 1.5;
+    } else {
+      ctx.strokeStyle = l.cross_theme ? 'rgba(80, 120, 200, 0.15)' : 'rgba(58, 74, 96, 0.12)';
+      ctx.lineWidth = 0.4;
+    }
+    ctx.stroke();
+  }
+
+  // PASSE 2 : Dessiner les nœuds
+  for (let i = 0; i < data.nodes.length; i++) {
+    const n = data.nodes[i];
+    if (!activeThemes.has(n.theme)) continue;
+
+    // Gestion du filtrage par recherche textuelle
+    let matchSearch = true;
+    if (searchQuery) {
+      matchSearch = n.title.toLowerCase().includes(searchQuery) || (n.content || '').toLowerCase().includes(searchQuery);
+    }
+
+    const isFocus = activeFocus && n.id === activeFocus.id;
+    const isNeighbor = activeFocus && (linkedByIndex[`${n.id},${activeFocus.id}`]);
+    
+    ctx.beginPath();
+    const radius = 3 + Math.sqrt(degreeMap[n.id] || 1) * 0.5;
+    ctx.arc(n.x, n.y, radius, 0, 2 * Math.PI);
+
+    if (!matchSearch) {
+      ctx.fillStyle = 'rgba(40, 50, 70, 0.05)';
+    } else if (activeFocus) {
+      if (isFocus) ctx.fillStyle = '#ffb84d';
+      else if (isNeighbor) ctx.fillStyle = n.color;
+      else ctx.fillStyle = 'rgba(40, 50, 70, 0.1)';
+    } else {
+      ctx.fillStyle = n.color;
+    }
+    ctx.fill();
+
+    // Contour des nœuds principaux
+    if (isFocus || (matchSearch && searchQuery)) {
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // N'afficher le texte que si on zoome assez OU si le nœud est ciblé/recherché
+    if (isFocus || isNeighbor || (transform.k > 1.2 && matchSearch && degreeMap[n.id] > 15) || (searchQuery && matchSearch)) {
+      ctx.fillStyle = isFocus ? '#ffb84d' : (matchSearch ? '#c5d4eb' : '#5d7290');
+      ctx.font = isFocus ? 'bold 11px sans-serif' : '9px sans-serif';
+      ctx.fillText(n.title.length > 20 ? n.title.slice(0, 20) + '…' : n.title, n.x + radius + 4, n.y + 3);
+    }
+  }
+
+  ctx.restore();
+}
+
+function setupInteractions() {
+  const d3Canvas = d3.select('#graph-canvas');
+
+  // Zoom / Pan
+  const zoom = d3.zoom()
+    .scaleExtent([0.05, 5])
+    .on('zoom', (e) => {
+      transform = e.transform;
+      tictoc();
+    });
+    
+  d3Canvas.call(zoom).on("dblclick.zoom", null);
+
+  // Drag & Drop + Hover + Clic Detection
+  d3Canvas.call(d3.drag()
+    .subject(getClosestNode)
+    .on('start', (e) => {
+      if (!e.active && simulation.alpha() < 0.2) simulation.alphaTarget(0.1).restart();
+      e.subject.fx = e.subject.x;
+      e.subject.fy = e.subject.y;
+    })
+    .on('drag', (e) => {
+      e.subject.fx = transform.invertX(e.x);
+      e.subject.fy = transform.invertY(e.y);
+    })
+    .on('end', (e) => {
+      if (!e.active) simulation.alphaTarget(0);
+      e.subject.fx = null;
+      e.subject.fy = null;
+    }));
+
+  // Détection du Hover
+  d3Canvas.on('mousemove', (e) => {
+    if (selectedNode) return; // Si un nœud est verrouillé, on ignore le survol
+    const m = d3.pointer(e);
+    const node = getClosestNode({ x: m[0], y: m[1] }, 25);
+    if (node !== hoveredNode) {
+      hoveredNode = node;
+      if (node) showDetails(node);
+      else clearFocus();
+      tictoc();
+    }
+  });
+
+  // Détection du clic pour verrouiller
+  d3Canvas.on('click', (e) => {
+    const m = d3.pointer(e);
+    const node = getClosestNode({ x: m[0], y: m[1] }, 25);
+    
+    if (node) {
+      selectedNode = (selectedNode?.id === node.id) ? null : node;
+      showDetails(node);
+    } else {
+      selectedNode = null;
+      clearFocus();
+    }
+    tictoc();
+  });
+
+  // Barre de recherche
+  document.getElementById('search').addEventListener('input', (e) => {
+    searchQuery = e.target.value.trim().toLowerCase();
+    tictoc();
+  });
+}
+
+// Recherche le nœud le plus proche des coordonnées de la souris
+function getClosestNode(coords, maxDistance = Infinity) {
+  const x = transform.invertX(coords.x);
+  const y = transform.invertY(coords.y);
+  let closestNode = null;
+  let minDist = maxDistance;
+
+  for (let i = 0; i < data.nodes.length; i++) {
+    const n = data.nodes[i];
+    if (!activeThemes.has(n.theme)) continue;
+    const dist = Math.hypot(n.x - x, n.y - y);
+    if (dist < minDist) {
+      minDist = dist;
+      closestNode = n;
+    }
+  }
+  return closestNode;
+}
+
+function showDetails(d) {
+  const conns = data.links
+    .filter(l => l.source.id === d.id || l.target.id === d.id)
+    .map(l => {
+      const other = l.source.id === d.id ? l.target : l.source;
+      return { node: other, weight: l.weight, cross: l.cross_theme };
+    })
+    .filter(c => activeThemes.has(c.node.theme))
+    .sort((a, b) => b.weight - a.weight);
+
+  const crossCount = conns.filter(c => c.cross).length;
+
+  document.getElementById('details-content').innerHTML = `
+    <div class="node-theme">
+      <div class="dot" style="background:${d.color}; color:${d.color}"></div>
+      <span style="color:${d.color}">${d.theme.replace(/_/g, ' ')}</span>
+    </div>
+    <div class="node-title">${escapeHTML(d.title)}</div>
+    ${d.content ? `<div class="node-content">${escapeHTML(d.content)}</div>` : ''}
+    ${d.source && d.source !== '—' ? `<div class="node-source"><b>Source:</b> ${escapeHTML(d.source)}</div>` : ''}
+    <div class="conn-section-title">
+      <span>${conns.length} connexions</span>
+      <small>${crossCount} inter-thèmes</small>
+    </div>
+    <div style="max-height:350px; overflow-y:auto;">
+      ${conns.slice(0, 60).map(c => `
+        <div class="conn-item" onclick="selectNodeById('${c.node.id}')">
+          <div class="dot" style="background:${c.node.color}"></div>
+          <span class="name">${escapeHTML(c.node.title)}</span>
+          ${c.cross ? '<span class="cross">↔</span>' : ''}
+          <span class="w">${Math.round(c.weight * 100)}%</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function selectNodeById(id) {
+  const node = data.nodes.find(n => n.id === id);
+  if (node) {
+    selectedNode = node;
+    showDetails(node);
+    tictoc();
+  }
+}
+
+function clearFocus() {
+  if (selectedNode) return;
+  document.getElementById('details-content').innerHTML = `
+    <div class="empty-state">
+      <div class="icon">◌</div>
+      Survolez un nœud pour explorer ses connexions.<br>
+      Cliquez pour le verrouiller.
+    </div>`;
+}
+
+function escapeHTML(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function toggleTheme(name) {
+  if (activeThemes.has(name)) activeThemes.delete(name);
+  else activeThemes.add(name);
+  document.getElementById(`chip-${name}`).classList.toggle('muted', !activeThemes.has(name));
+  tictoc();
+}
+
+function toggleAll(on) {
+  data.themes.forEach(t => {
+    if (on) activeThemes.add(t.name); else activeThemes.clear();
+    document.getElementById(`chip-${t.name}`).classList.toggle('muted', !on);
+  });
+  tictoc();
+}
+
+function restartSim() {
+  if (simulation) simulation.alpha(0.5).restart();
+}
+
+init();
+</script>
+</body>
+</html>
