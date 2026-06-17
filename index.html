@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Mnemia — Second Cerveau (Optimisé Canvas)</title>
+<title>Second Cerveau (Optimisé Canvas)</title>
 <style>
   :root {
     --bg-deep: #050810;
@@ -237,7 +237,7 @@
 
   <main id="graph-area">
     <div id="topbar">
-      <div id="brand">Mnemia <small>Second Cerveau</small></div>
+      <div id="brand"><small>Second Cerveau</small></div>
       <input id="search" placeholder="Rechercher un concept...">
     </div>
     <canvas id="graph-canvas"></canvas>
@@ -278,7 +278,7 @@ async function init() {
   window.addEventListener('resize', resizeCanvas);
 
   try {
-    const res = await fetch('mnemia_brain.json');
+    const res = await fetch('exemple.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     data = await res.json();
   } catch (e) {
@@ -317,7 +317,7 @@ function resizeCanvas() {
 function showError(msg) {
   const banner = document.createElement('div');
   banner.className = 'error-banner';
-  banner.innerHTML = `Impossible de charger <code>mnemia_brain.json</code> (${msg})`;
+  banner.innerHTML = `Impossible de charger <code>exemple.json</code> (${msg})`;
   document.getElementById('graph-area').appendChild(banner);
 }
 
