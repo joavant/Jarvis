@@ -1,0 +1,72 @@
+{
+  "stats": {
+    "nodes": 4,
+    "links": 4,
+    "threshold": 0.55
+  },
+  "themes": [
+    { "name": "Physique", "color": "#378ADD", "count": 2 },
+    { "name": "Informatique_Codage", "color": "#534AB7", "count": 1 },
+    { "name": "Philosophie", "color": "#A3325B", "count": 1 }
+  ],
+  "nodes": [
+    {
+      "id": "node_01",
+      "title": "Physique Quantique",
+      "theme": "Physique",
+      "color": "#378ADD",
+      "content": "Étude du comportement de la matière et de la lumière à l'échelle atomique.",
+      "source": "Livre de cours - Chapitre 1"
+    },
+    {
+      "id": "node_02",
+      "title": "Principe de Superposition",
+      "theme": "Physique",
+      "color": "#378ADD",
+      "content": "Un état quantique peut posséder plusieurs valeurs simultanément jusqu'à ce qu'une mesure soit effectuée.",
+      "source": "Article scientifique - Pr. Dupont"
+    },
+    {
+      "id": "node_03",
+      "title": "Calculateur Quantique (Qubit)",
+      "theme": "Informatique_Codage",
+      "color": "#534AB7",
+      "content": "Ordinateur exploitant les propriétés quantiques comme la superposition pour traiter des données de manière exponentielle.",
+      "source": "Conférence Mnemia Tech 2026"
+    },
+    {
+      "id": "node_04",
+      "title": "Déterminisme",
+      "theme": "Philosophie",
+      "color": "#A3325B",
+      "content": "Concept philosophique selon lequel chaque événement est déterminé par les événements passés, mis à l'épreuve par l'indéterminisme quantique.",
+      "source": "Essai de Philosophie des Sciences"
+    }
+  ],
+  "links": [
+    {
+      "source": "node_01",
+      "target": "node_02",
+      "weight": 0.85,
+      "cross_theme": false
+    },
+    {
+      "source": "node_02",
+      "target": "node_03",
+      "weight": 0.78,
+      "cross_theme": true
+    },
+    {
+      "source": "node_01",
+      "target": "node_03",
+      "weight": 0.62,
+      "cross_theme": true
+    },
+    {
+      "source": "node_01",
+      "target": "node_04",
+      "weight": 0.58,
+      "cross_theme": true
+    }
+  ]
+}
