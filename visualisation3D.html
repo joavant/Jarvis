@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Mnemia — Cortex 3D</title>
+<title>Cortex 3D</title>
 <style>
   :root {
     --bg-deep: #050810;
@@ -247,7 +247,7 @@
 
   <main id="graph-area">
     <div id="topbar">
-      <div id="brand">Mnemia <small>Cortex 3D</small></div>
+      <div id="brand"><small>Cortex 3D</small></div>
       <input id="search" placeholder="Rechercher un concept...">
     </div>
     <div id="graph-3d"></div>
@@ -279,7 +279,7 @@ let degreeMap = {};
 
 async function init() {
   try {
-    const res = await fetch('mnemia_brain.json');
+    const res = await fetch('exemple.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     rawData = await res.json();
   } catch (e) {
