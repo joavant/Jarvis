@@ -57,7 +57,7 @@ http://0.0.0.0:8000/nom_du_fichier_html
 
 Tu peux explorer la base de connaissances directement depuis ton navigateur grâce aux deux modes de visualisation disponibles :
 
-* **[Lancer la version 2D (Plus fluide et rapide)](https://joavant.github.io/Jarvis/visualisation2d.html)**
-* **[Lancer la version 3D](https://joavant.github.io/Jarvis/visualisation3d.html)**
+* **[Lancer la version 2D (Plus fluide et rapide)](https://joavant.github.io/Jarvis/visualisation2D.html)**
+* **[Lancer la version 3D](https://joavant.github.io/Jarvis/visualisation3D.html)**
 
 > 💡 *Note : Personnellement, l'affichage reste fluide en local jusqu'à 12 975 nœuds et 56 982 liens avec les paramètres par défaut.*
