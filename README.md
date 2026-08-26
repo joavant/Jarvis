@@ -60,4 +60,4 @@ Tu peux explorer la base de connaissances directement depuis ton navigateur grâ
 * **[Lancer la version 2D (Plus fluide et rapide)](https://joavant.github.io/Jarvis/visualisation2D.html)**
 * **[Lancer la version 3D](https://joavant.github.io/Jarvis/visualisation3D.html)**
 
-> 💡 *Note : Personnellement, l'affichage reste fluide en local jusqu'à 12 975 nœuds et 56 982 liens avec les paramètres par défaut.*
+> 💡 *Note : Personnellement, l'affichage reste fluide en local jusqu'à 31 000 nœuds et 138 000 liens avec les paramètres par défaut.*
