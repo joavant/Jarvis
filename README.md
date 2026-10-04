@@ -8,7 +8,6 @@ J.A.R.V.I.S. est un assistant domestique inspiré de l'univers Marvel, pensé po
 - **Commandes rapides** : musique, ouverture d'applications et arrêt sont traités sans passer par le LLM, donc instantanément.
 - **Synthèse vocale** : voix française *Piper*, lecture directe via `sounddevice`.
 - **Météo** : prévisions horaires sur 5 jours (OpenWeather) avec cache CSV régénéré chaque jour.
-- **Animations** : génération et rendu de scènes *Manim* à la demande, ouvertes automatiquement.
 - **Shazam** : identifie la musique ambiante via le micro (5 secondes d'écoute).
 - **Mesure de latence** : le temps écoulé depuis la question est affiché après chaque appel au modèle.
 
