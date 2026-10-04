@@ -1,63 +1,113 @@
 # Project J.A.R.V.I.S. (Just A Rather Very Intelligent System)
 
-J.A.R.V.I.S. est un assistant personnel intelligent et multimodal inspiré de l'univers Marvel. Il combine reconnaissance vocale, vision par ordinateur, analyse musicale (Shazam) et une base de connaissances personnalisée (RAG).
+J.A.R.V.I.S. est un assistant domestique inspiré de l'univers Marvel, pensé pour Linux (GNOME). Un LLM local tourne via Ollama, appelle des outils (tool calling) pour piloter l'ordinateur, puis répond à voix haute avec Piper TTS. Rien n'est envoyé dans le cloud, hors météo et IP publique.
 
+## Fonctionnalités
 
+- **Tool calling local** : le LLM (Ollama) choisit et enchaîne les outils, jusqu'à 6 étapes par demande (garde-fou anti-boucle).
+- **Commandes rapides** : musique, ouverture d'applications et arrêt sont traités sans passer par le LLM, donc instantanément.
+- **Synthèse vocale** : voix française *Piper*, lecture directe via `sounddevice`.
+- **Météo** : prévisions horaires sur 5 jours (OpenWeather) avec cache CSV régénéré chaque jour.
+- **Animations** : génération et rendu de scènes *Manim* à la demande, ouvertes automatiquement.
+- **Shazam** : identifie la musique ambiante via le micro (5 secondes d'écoute).
+- **Mesure de latence** : le temps écoulé depuis la question est affiché après chaque appel au modèle.
 
-## ✨ Fonctionnalités
+### Outils disponibles
 
-- **Reconnaissance Vocale Offline** : Utilise *Vosk* pour une écoute continue sans envoyer de données dans le cloud.
-- **Cerveau RAG (Retrieval-Augmented Generation)** : Capacité d'apprendre à partir de tes propres PDF, documents Word et URLs via *ChromaDB* et *Ollama*.
-- **Vision Artificielle** : Reconnaissance faciale et comptage de personnes en temps réel avec *OpenCV*.
-- **Multimédia** : Intégration de *Shazam* pour identifier la musique ambiante et contrôle complet de *Spotify*.
-- **Météo & Système** : Rapports météo en temps réel (OpenWeather) et monitoring des ressources du PC (CPU, Batterie).
-- **Interface Futuriste** : HUD interactif développé en HTML/JS intégré dans une fenêtre *PyQt5* transparente.
+| Catégorie | Outils |
+|---|---|
+| Informations | heure, date, état du système (CPU, batterie, températures), adresse IP locale et publique, top 5 des processus CPU |
+| Connectivité | Bluetooth on/off, Wi-Fi on/off |
+| Son et écran | volume, mute/unmute, luminosité, verrouillage, mise en veille |
+| Applications | fermer une application, ouvrir un site web, recherche Google |
+| Productivité | minuteurs, rappels à heure fixe (annulation et liste), calculatrice, recherche de fichier, presse-papiers (lecture/copie), capture d'écran, notification de bureau |
+| Multimédia | identification Shazam, contrôle de la musique (pause, reprise, titre suivant) |
+| Météo | prévisions par ville, date et plage horaire |
+
+### Commandes rapides locales
+
+- **Musique** : "pause" ou "stop", "suivant", "reprends" (via `playerctl`).
+- **Applications** : "ouvre / lance / démarre" suivi de navigateur, terminal, invite de commande, calculatrice, documents, fichiers, éditeur de texte ou spotify.
+- **Arrêt** : "quitter", "au revoir" ou "eteins-toi".
+
+## Structure du projet
+
+| Fichier | Rôle |
+|---|---|
+| `jarvisv7.py` | Boucle principale, enregistrement des outils, prompt système, commandes rapides |
+| `importmeteo.py` | Outil météo (API OpenWeather + cache `meteo.csv`), utilisable aussi seul |
+| `voice.py` | Synthèse vocale Piper : `speak(texte)` |
 
 ## Installation
 
 ### 1. Prérequis
-- Python 3.10+
-- [Ollama](https://ollama.ai/) (avec le modèle `gemma2:2b`)
-- [Piper TTS](https://github.com/rhasspy/piper) pour la synthèse vocale.
-- Un modèle Vosk à placer dans le dossier `/model`.
+
+- Linux avec GNOME (Ubuntu, Linux Mint...) et Python 3.10+
+- [Ollama](https://ollama.ai/) avec un modèle qui **supporte les tools**. Vérifiez la ligne `tools` dans les capacités avec `ollama show <modele>`.
+- [Piper TTS](https://github.com/rhasspy/piper) et une voix française (fichiers `.onnx` et `.onnx.json`)
+- Une clé API [OpenWeather](https://openweathermap.org/api)
+
+Outils système utilisés :
+
+```bash
+sudo apt install bluez rfkill network-manager pulseaudio-utils brightnessctl playerctl xclip gnome-screenshot libnotify-bin alsa-utils gnome-terminal gnome-calculator nautilus gedit
+```
 
 ### 2. Clonage et dépendances
+
 ```bash
-git clone [https://github.com/joavant/Jarvis.git](https://github.com/joavant/Jarvis.git)
+git clone https://github.com/joavant/Jarvis.git
 cd Jarvis
-pip install -r requirements.txt
+python3 -m venv venv
+source venv/bin/activate
+pip install psutil requests python-dotenv ollama shazamio piper-tts sounddevice numpy manim
 ```
 
-### Lancez d'abord le script de connaissance pour indexer vos documents Option 4:
+### 3. Modèle Ollama
+
 ```bash
-
-python rag4.py
+ollama pull qwen3:1.7b
 ```
 
-Lancez l'assistant principal :
+Le modèle se change avec `MODEL_NAME` dans `jarvisv7.py`. Un modèle sans support des tools provoque l'erreur `does not support tools (status code: 400)`.
+
+### 4. Configuration
+
+Créez un fichier `.env` à la racine du projet :
+
+```
+OPENWEATHER_APP_ID=votre_cle_api
+```
+
+Renseignez ensuite vos valeurs dans le code :
+
+| Fichier | Variable | Description |
+|---|---|---|
+| `jarvisv7.py` | `BLUETOOTH_MAC` | Adresse MAC de votre adaptateur Bluetooth |
+| `jarvisv7.py` | `VILLE_PAR_DEFAUT` | Ville utilisée si aucune n'est précisée |
+| `importmeteo.py` | `DEFAULT_CITY` | Ville par défaut du module météo |
+| `voice.py` | `MODEL_PATH`, `CONFIG_PATH` | Chemins du modèle Piper `.onnx` et de son `.onnx.json` |
+
+## Utilisation
+
 ```bash
-
-python jarvis6_1.py
+python3 jarvisv7.py
 ```
 
-# Visualiser la base de donné
-1. Lancez la commande 
+Tapez votre demande à l'invite, par exemple :
+
+- "Active le bluetooth puis ouvre le site ....."
+- "Quelle est la météo à Lyon demain entre 8h et 18h ?"
+- "Mets un minuteur de 10 minutes pour les pâtes"
+- "Règle le volume à 40"
+
+Tapez `quitter` pour arrêter. Le module météo se teste aussi seul :
+
 ```bash
-python3 co-occurence.py
+python3 importmeteo.py
 ```
-2. Lancez cette commande
-```bash
-python3 -m http.server 8000
-```
-3. puis, sur un navigateur faites
-```bash
-http://0.0.0.0:8000/nom_du_fichier_html
-```
-## Démo en ligne (Exemple avec 4 nœuds)
 
-Tu peux explorer la base de connaissances directement depuis ton navigateur grâce aux deux modes de visualisation disponibles :
+## Notes
 
-* **[Lancer la version 2D (Plus fluide et rapide)](https://joavant.github.io/Jarvis/visualisation2D.html)**
-* **[Lancer la version 3D](https://joavant.github.io/Jarvis/visualisation3D.html)**
-
-> 💡 *Note : Personnellement, l'affichage reste fluide en local jusqu'à 31 000 nœuds et 138 000 liens avec les paramètres par défaut.*
+- La météo est limitée aux 5 prochains jours (limite de l'API gratuite). Le cache `meteo.csv` est vidé au premier lancement de chaque jour.
+- Un minuteur et un rappel portant le même libellé s'écrasent mutuellement.
