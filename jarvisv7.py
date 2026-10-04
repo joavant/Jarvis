@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from ollama import chat
 from shazamio import Shazam
 from testvoix.voice import speak
-from importmeteo import get_weather_forecast, reset_weather_cache
+from meteo import get_weather_forecast, reset_weather_cache
 from testmanim import create_manim_animation
 import asyncio
 
